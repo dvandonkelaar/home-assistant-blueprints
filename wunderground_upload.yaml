@@ -16,6 +16,7 @@ blueprint:
       shell_command:
         curl_get: 'curl -X GET {{ url }}'
   domain: automation
+  source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/wunderground_upload.yaml"
   input:
     station_id:
       name: Station ID
