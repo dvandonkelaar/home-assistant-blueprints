@@ -188,6 +188,6 @@ action:
           - service: !input curl_command_service
             data:
               url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
-  - alias: "Wait 10 seconds to prevent multiple uploads"
+  - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
