@@ -1,0 +1,192 @@
+
+blueprint:
+  name: WUnderground upload
+  description: >
+    Upload data from Home Assistant to WUnderground.
+
+    Config:
+      The station_id and station_key variable must be fetched from WUnderground.
+      The sensor_* variables are the sensors whos data will be uploaded
+      The trigger_entities variable specifies the entries to trigger state changes on (this could be a list)
+      The curl_command_service variable specifies the CURL-service to execute.
+      The refresh_frequency variable specifies the frequency the sensors update their data
+
+    The CURL-service must exist in Home Assistant.
+    This can be configured with the following YAML
+      shell_command:
+        curl_get: 'curl -X GET {{ url }}'
+  domain: automation
+  input:
+    station_id:
+      name: Station ID
+      default: ''
+    station_key:
+      name: Station key
+      default: ''
+    sensor_baro:
+      name: Barometer sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_temp:
+      name: Temperature sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+      default: ''
+    sensor_dewpt:
+      name: Dew point sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_humidity:
+      name: Humidity sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: humidity
+      default: ''
+    sensor_windspeed:
+      name: Wind speed sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_windgust:
+      name: Wind gust sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_winddir:
+      name: Wind direction sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_rain:
+      name: Rain sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_dailyrain:
+      name: Daily rain sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_indoortemp:
+      name: Indoor temperature sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+      default: ''
+    sensor_indoorhumidity:
+      name: Indoor humidity sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+      default: ''
+    refresh_frequency:
+      name: Refresh frequency (seconds)
+      selector:
+        number:
+          min: 1
+          max: 10800
+          step: 1
+          unit_of_measurement: seconds
+    trigger_entities:
+      name: Trigger entities
+      selector:
+        entity:
+      default: ''
+    curl_command_service:
+      name: CURL command service
+      selector:
+        text:
+      default: ''
+    delay:
+      name: Delay after publishing results
+      selector:
+        number:
+          min: 0
+          max: 10800
+          step: 1 
+          unit_of_measurement: seconds
+      default: 10
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input trigger_entities
+    
+variables:
+  station_id: !input station_id
+  station_key: !input station_key
+  sensor_baro: !input sensor_baro
+  sensor_temp: !input sensor_temp
+  sensor_dewpt: !input sensor_dewpt
+  sensor_humidity: !input sensor_humidity
+  sensor_windspeed: !input sensor_windspeed
+  sensor_windgust: !input sensor_windgust
+  sensor_winddir: !input sensor_winddir
+  sensor_rain: !input sensor_rain
+  sensor_dailyrain: !input sensor_dailyrain
+  sensor_indoortemp: !input sensor_indoortemp
+  sensor_indoorhumidity: !input sensor_indoorhumidity
+  rtfreq: !input refresh_frequency
+  delay: !input delay
+  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float) / 33.8639) | float(1) }}"
+  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float) * 1.8) + 32) | round(1) }}"
+  dewptf: "{{ sensor_dewpt if sensor_dewpt == '' else ((states(sensor_dewpt) | float) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float) * 1.8) + 32) | round(1) }}"
+  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float) | round(1) }}"
+  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float) * 0.6213) | round(1) }}"
+  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float) * 0.6213) | round(1) }}"
+  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float) | round(1) }}"
+  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float) / 1 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 25.4) | float(1) }}"
+  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float) / 1 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 25.4) | round(1) }}"
+  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float) * 1.8) + 32) | round(1) }}"
+  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float) | round(1) }}"
+  payload: >
+    {% set data = namespace(sensors=[]) %}
+    {% for i in [['rtfreq', rtfreq]
+          ,['baromin', baromin]
+          ,['tempf', tempf]
+          ,['dewptf', dewptf]
+          ,['humidity', humidity]
+          ,['windspeedmph', windspeedmph]
+          ,['windgustmph', windgustmph]
+          ,['winddir', winddir]
+          ,['rainin', rainin]
+          ,['dailyrainin', dailyrainin]
+          ,['indoortempf', indoortempf]
+          ,['indoorhumidity', indoorhumidity]
+          ]%}
+      {% if i[1] != '' %}
+        {% set data.sensors= data.sensors + [i[0] + '=' + (i[1] | string)] %}
+      {% endif %}
+    {% endfor %}
+    ID={{ station_id }}&PASSWORD={{ station_key }}&action=updateraww&realtime=1&dateutc=now{{ '&' if data.sensors | length > 0 else ''}}{{ data.sensors | join('&') }}
+
+action:
+  - alias: "Check if station_id and station_key exist"
+    choose:
+      - conditions: >
+          {{      station_id != ''
+              and station_key != ''
+          }}
+        sequence:
+          - service: !input curl_command_service
+            data:
+              url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
+  - alias: "Wait 10 seconds to prevent multiple uploads"
+    delay:
+      seconds: "{{ delay | int }}"
