@@ -21,7 +21,7 @@ blueprint:
         - id: netatmo_wunderground_upload
           alias: Netatmo to WUnderground upload
           use_blueprint:
-            path: system/wunderground_upload.yaml
+            path: wunderground_upload.yaml
             input:
               station_id: !secret wunderground_station_id
               station_key: !secret wunderground_station_key
