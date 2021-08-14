@@ -15,6 +15,28 @@ blueprint:
     This can be configured with the following YAML
       shell_command:
         curl_get: 'curl -X GET {{ url }}'
+
+    Automation config example:
+      automation:
+        - id: netatmo_wunderground_upload
+          alias: Netatmo to WUnderground upload
+          use_blueprint:
+            path: system/wunderground_upload.yaml
+            input:
+              station_id: !secret wunderground_station_id
+              station_key: !secret wunderground_station_key
+              sensor_baro: 'sensor.outdoor_pressure'
+              sensor_temp: 'sensor.outdoor_temperature'
+              sensor_humidity: 'sensor.outdoor_humidity'
+              sensor_rain: 'sensor.outdoor_rain'
+              sensor_dailyrain: 'sensor.outdoor_rain_today'
+              refresh_frequency: 300
+              trigger_entities:
+                - sensor.outdoor_temperature
+                - sensor.outdoor_humidity
+                - sensor.outdoor_rain
+                - sensor.outdoor_rain_today
+              curl_command_service: shell_command.curl_get
   domain: automation
   source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/wunderground_upload.yaml"
   input:
