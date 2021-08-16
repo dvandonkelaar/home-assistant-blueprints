@@ -167,17 +167,17 @@ variables:
   sensor_indoorhumidity: !input sensor_indoorhumidity
   rtfreq: !input refresh_frequency
   delay: !input delay
-  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float) / 33.8639) | float(1) }}"
-  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float) * 1.8) + 32) | round(1) }}"
-  dewptf: "{{ sensor_dewpt if sensor_dewpt == '' else ((states(sensor_dewpt) | float) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float) * 1.8) + 32) | round(1) }}"
-  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float) | round(1) }}"
-  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float) * 0.6213) | round(1) }}"
-  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float) * 0.6213) | round(1) }}"
-  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float) | round(1) }}"
-  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float) / 25.4 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 1) | float(1) }}"
-  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float) / 25.4 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 1) | round(1) }}"
-  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float) * 1.8) + 32) | round(1) }}"
-  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float) | round(1) }}"
+  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float) / 33.8639) }}"
+  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float) * 1.8) + 32) }}"
+  dewptf: "{{ sensor_dewpt if sensor_dewpt == '' else ((states(sensor_dewpt) | float) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float) * 1.8) + 32) }}"
+  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float) }}"
+  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float) * 0.6213) }}"
+  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float) * 0.6213) }}"
+  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float) }}"
+  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float) / 25.4 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 1) }}"
+  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float) / 25.4 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 1) }}"
+  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float) * 1.8) + 32) }}"
+  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float) }}"
   payload: >
     {% set data = namespace(sensors=[]) %}
     {% for i in [['rtfreq', rtfreq]
@@ -194,7 +194,7 @@ variables:
           ,['indoorhumidity', indoorhumidity]
           ]%}
       {% if i[1] != '' %}
-        {% set data.sensors= data.sensors + [i[0] + '=' + (i[1] | string)] %}
+        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq' else (i[1] | round(2)) | string))] %}
       {% endif %}
     {% endfor %}
     ID={{ station_id }}&PASSWORD={{ station_key }}&action=updateraww&realtime=1&dateutc=now{{ '&' if data.sensors | length > 0 else ''}}{{ data.sensors | join('&') }}
