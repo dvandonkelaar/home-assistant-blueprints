@@ -18,8 +18,8 @@ blueprint:
 
     Automation config example:
       automation:
-        - id: netatmo_wunderground_upload
-          alias: Netatmo to WUnderground upload
+        - id: wunderground_data_upload
+          alias: WUnderground data upload
           use_blueprint:
             path: wunderground_upload.yaml
             input:
