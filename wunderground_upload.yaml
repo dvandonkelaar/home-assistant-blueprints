@@ -32,12 +32,10 @@ blueprint:
               sensor_dailyrain: 'sensor.outdoor_rain_today'
               refresh_frequency: 300
               trigger_entities:
-                device_id:
-                  - 1081268ab51222241b6ca377e0018fa5
-                  - 7ebde5b1d762337eb3ddc755dcf53b62
-                entity_id:
-                  - sensor.outdoor_temperature
-                  - sensor.outdoor_humidity
+                - sensor.outdoor_temperature
+                - sensor.outdoor_humidity
+                - sensor.outdoor_rain
+                - sensor.outdoor_rain_today
               curl_command_service: shell_command.curl_get
   domain: automation
   source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/wunderground_upload.yaml"
@@ -129,7 +127,7 @@ blueprint:
     trigger_entities:
       name: Trigger entities
       selector:
-        target:
+        entity:
       default: ''
     curl_command_service:
       name: CURL command service
