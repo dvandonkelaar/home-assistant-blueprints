@@ -212,7 +212,7 @@ variables:
           ,['indoorhumidity', indoorhumidity]
           ]%}
       {% if i[1] != '' %}
-        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq' else (i[1] | round(2)) | string))] %}
+        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq' else (i[1] | round(3)) | string))] %}
       {% endif %}
     {% endfor %}
     ID={{ station_id }}&PASSWORD={{ station_key }}&action=updateraww&realtime=1&dateutc=now{{ '&' if data.sensors | length > 0 else ''}}{{ data.sensors | join('&') }}
