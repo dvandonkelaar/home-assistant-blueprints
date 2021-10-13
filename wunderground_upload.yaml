@@ -175,18 +175,18 @@ variables:
   sensor_indoorhumidity: !input sensor_indoorhumidity
   rtfreq: !input refresh_frequency
   delay: !input delay
-  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float) / 33.8639) }}"
-  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float) * 1.8) + 32) }}"
-  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float) }}"
-  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float) * 0.6213) }}"
-  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float) * 0.6213) }}"
-  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float) }}"
-  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float) / 25.4 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 1) }}"
-  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float) / 25.4 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 1) }}"
-  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float) * 1.8) + 32) }}"
-  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float) }}"
+  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float(default=0)) / 33.8639) }}"
+  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float(default=0)) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float(default=0)) * 1.8) + 32) }}"
+  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float(default=0)) }}"
+  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float(default=0)) * 0.6213) }}"
+  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float(default=0)) * 0.6213) }}"
+  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float(default=0)) }}"
+  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float(default=0)) / 25.4 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 1) }}"
+  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float(default=0)) / 25.4 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 1) }}"
+  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float(default=0)) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float(default=0)) * 1.8) + 32) }}"
+  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float(default=0)) }}"
   dewptf_calculated: >
-    {% set T = ((states(sensor_temp) | float) if state_attr(sensor_temp, 'unit_of_measurement') == '°C' else ((states(sensor_temp) | float) - 32) / 1.8) %}
+    {% set T = ((states(sensor_temp) | float(default=0)) if state_attr(sensor_temp, 'unit_of_measurement') == '°C' else ((states(sensor_temp) | float(default=0)) - 32) / 1.8) %}
     {% set RH = humidity %}
     {% set dewpt = '' %}
     {% if sensor_temp != '' and sensor_humidity != '' %}
@@ -195,7 +195,7 @@ variables:
       {% set dewpt = (dewpt * 1.8) + 32 %}
     {% endif %}
     {{ dewpt }}
-  dewptf: "{{ (dewptf_calculated if calculate_dewpt is true else sensor_dewpt) if sensor_dewpt == '' else ((states(sensor_dewpt) | float) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float) * 1.8) + 32) }}"
+  dewptf: "{{ (dewptf_calculated if calculate_dewpt is true else sensor_dewpt) if sensor_dewpt == '' else ((states(sensor_dewpt) | float(default=0)) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float(default=0)) * 1.8) + 32) }}"
   payload: >
     {% set data = namespace(sensors=[]) %}
     {% for i in [['rtfreq', rtfreq]
