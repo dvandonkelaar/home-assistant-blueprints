@@ -147,7 +147,7 @@ blueprint:
         number:
           min: 0
           max: 10800
-          step: 1 
+          step: 1
           unit_of_measurement: seconds
       default: 10
 
@@ -157,7 +157,7 @@ max_exceeded: silent
 trigger:
   - platform: state
     entity_id: !input trigger_entities
-    
+
 variables:
   station_id: !input station_id
   station_key: !input station_key
