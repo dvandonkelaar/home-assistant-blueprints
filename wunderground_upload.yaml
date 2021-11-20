@@ -10,7 +10,8 @@ blueprint:
       The trigger_entities variable specifies the entries to trigger state changes on (this could be a list)
       The curl_command_service variable specifies the CURL-service to execute.
       The refresh_frequency variable specifies the frequency the sensors update their data
-      The dewpoint temperature can be calculated based on the outdoor temperature and the outdoor humidity. By default, it will be calculated, to disable this set calculate_dewpt to false.
+      The dewpoint temperature can be calculated based on the outdoor temperature and the outdoor humidity.
+        By default, it will be calculated, to disable this set calculate_dewpt to false.
 
     The CURL-service must exist in Home Assistant.
     This can be configured with the following YAML
@@ -68,7 +69,8 @@ blueprint:
       default: ''
     calculate_dewpt:
       name: Calculate dewpoint
-      description: Dewpoint calculation is only possible if the outdoor temperature and outdoor humidity sensor are available.
+      description:
+        Dewpoint calculation is only possible if the outdoor temperature and outdoor humidity sensor are available.
       selector:
         boolean:
       default: true
@@ -175,18 +177,48 @@ variables:
   sensor_indoorhumidity: !input sensor_indoorhumidity
   rtfreq: !input refresh_frequency
   delay: !input delay
-  baromin: "{{ sensor_baro if sensor_baro == '' and state_attr(sensor_baro, 'unit_of_measurement') not in ['mbar', 'hPa'] else ((states(sensor_baro) | float(default=0)) / 33.8639) }}"
-  tempf: "{{ sensor_temp if sensor_temp == '' else ((states(sensor_temp) | float(default=0)) if state_attr(sensor_temp, 'unit_of_measurement') == '°F' else ((states(sensor_temp) | float(default=0)) * 1.8) + 32) }}"
-  humidity: "{{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float(default=0)) }}"
-  windspeedmph: "{{ sensor_windspeed if sensor_windspeed == '' or state_attr(sensor_windspeed, 'unit_of_measurement') != 'km/h' else ((states(sensor_windspeed) | float(default=0)) * 0.6213) }}"
-  windgustmph: "{{ sensor_windgust if sensor_windgust == '' or state_attr(sensor_windgust, 'unit_of_measurement') != 'km/h' else ((states(sensor_windgust) | float(default=0)) * 0.6213) }}"
-  winddir: "{{ sensor_winddir if sensor_winddir == '' else (states(sensor_winddir) | float(default=0)) }}"
-  rainin: "{{ sensor_rain if sensor_rain == '' else ((states(sensor_rain) | float(default=0)) / 25.4 if state_attr(sensor_rain, 'unit_of_measurement') == 'mm' else 1) }}"
-  dailyrainin: "{{ sensor_dailyrain if sensor_dailyrain == '' else ((states(sensor_dailyrain) | float(default=0)) / 25.4 if state_attr(sensor_dailyrain, 'unit_of_measurement') == 'mm' else 1) }}"
-  indoortempf: "{{ sensor_indoortemp if sensor_indoortemp == '' else ((states(sensor_indoortemp) | float(default=0)) if state_attr(sensor_indoortemp, 'unit_of_measurement') == '°F' else ((states(sensor_indoortemp) | float(default=0)) * 1.8) + 32) }}"
-  indoorhumidity: "{{ sensor_indoorhumidity if sensor_indoorhumidity == '' else (states(sensor_indoorhumidity) | float(default=0)) }}"
+  baromin: >
+    {% set unit_of_measurement = state_attr(sensor_baro, 'unit_of_measurement') %}
+    {{ sensor_baro if sensor_baro == '' and unit_of_measurement not in ['mbar', 'hPa']
+        else ((states(sensor_baro) | float(default=0)) / 33.8639) }}
+  tempf: >
+    {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
+    {{ sensor_temp if sensor_temp == ''
+        else ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°F'
+          else ((states(sensor_temp) | float(default=0)) * 1.8) + 32) }}
+  humidity: >
+    {{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float(default=0)) }}
+  windspeedmph: >
+    {% set unit_of_measurement = state_attr(sensor_windspeed, 'unit_of_measurement') %}
+    {{ sensor_windspeed if sensor_windspeed == '' or unit_of_measurement != 'km/h'
+        else ((states(sensor_windspeed) | float(default=0)) * 0.6213) }}
+  windgustmph: >
+    {% set unit_of_measurement = state_attr(sensor_windgust, 'unit_of_measurement') %}
+    {{ sensor_windgust if sensor_windgust == '' or unit_of_measurement != 'km/h'
+        else ((states(sensor_windgust) | float(default=0)) * 0.6213) }}
+  winddir: >
+    {{ sensor_winddir if sensor_winddir == ''
+        else (states(sensor_winddir) | float(default=0)) }}
+  rainin: >
+    {% set unit_of_measurement = state_attr(sensor_rain, 'unit_of_measurement') %}
+    {{ sensor_rain if sensor_rain == ''
+        else ((states(sensor_rain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' else 1) }}
+  dailyrainin: >
+    {% set unit_of_measurement = state_attr(sensor_dailyrain, 'unit_of_measurement') %}
+    {{ sensor_dailyrain if sensor_dailyrain == ''
+        else ((states(sensor_dailyrain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' else 1) }}
+  indoortempf: >
+    {% set unit_of_measurement = state_attr(sensor_indoortemp, 'unit_of_measurement') %}
+    {{ sensor_indoortemp if sensor_indoortemp == ''
+        else ((states(sensor_indoortemp) | float(default=0)) if unit_of_measurement == '°F'
+          else ((states(sensor_indoortemp) | float(default=0)) * 1.8) + 32) }}
+  indoorhumidity: >
+    {{ sensor_indoorhumidity if sensor_indoorhumidity == ''
+        else (states(sensor_indoorhumidity) | float(default=0)) }}
   dewptf_calculated: >
-    {% set T = ((states(sensor_temp) | float(default=0)) if state_attr(sensor_temp, 'unit_of_measurement') == '°C' else ((states(sensor_temp) | float(default=0)) - 32) / 1.8) %}
+    {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
+    {% set T = ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°C'
+                else ((states(sensor_temp) | float(default=0)) - 32) / 1.8) %}
     {% set RH = humidity %}
     {% set dewpt = '' %}
     {% if sensor_temp != '' and sensor_humidity != '' %}
@@ -195,9 +227,15 @@ variables:
       {% set dewpt = (dewpt * 1.8) + 32 %}
     {% endif %}
     {{ dewpt }}
-  dewptf: "{{ (dewptf_calculated if calculate_dewpt is true else sensor_dewpt) if sensor_dewpt == '' else ((states(sensor_dewpt) | float(default=0)) if state_attr(sensor_dewpt, 'unit_of_measurement') == '°F' else ((states(sensor_dewpt) | float(default=0)) * 1.8) + 32) }}"
+  dewptf: >
+    {% set unit_of_measurement = state_attr(sensor_dewpt, 'unit_of_measurement') %}
+    {{ (dewptf_calculated if calculate_dewpt is true
+        else sensor_dewpt) if sensor_dewpt == ''
+          else ((states(sensor_dewpt) | float(default=0)) if unit_of_measurement == '°F'
+            else ((states(sensor_dewpt) | float(default=0)) * 1.8) + 32) }}
   payload: >
     {% set data = namespace(sensors=[]) %}
+
     {% for i in [['rtfreq', rtfreq]
           ,['baromin', baromin]
           ,['tempf', tempf]
@@ -212,10 +250,19 @@ variables:
           ,['indoorhumidity', indoorhumidity]
           ]%}
       {% if i[1] != '' %}
-        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq' else (i[1] | round(3)) | string))] %}
+        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
+                                              else (i[1] | round(3)) | string))] %}
       {% endif %}
     {% endfor %}
-    ID={{ station_id }}&PASSWORD={{ station_key }}&action=updateraww&realtime=1&dateutc=now{{ '&' if data.sensors | length > 0 else ''}}{{ data.sensors | join('&') }}
+
+    {% set _payload = 'ID=' + station_id %}
+    {% set _payload = _payload + '&PASSWORD=' + station_key %}
+    {% set _payload = _payload + '&action=updateraww' %}
+    {% set _payload = _payload + '&realtime=1' %}
+    {% set _payload = _payload + '&dateutc=now' %}
+    {% set _payload = _payload + '&' if data.sensors | length > 0 else '' %}
+    {% set _payload = _payload + data.sensors | join('&') %}
+    {{ _payload }}
 
 action:
   - alias: "Check if station_id and station_key exist"
