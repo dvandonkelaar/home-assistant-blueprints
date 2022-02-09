@@ -222,7 +222,7 @@ variables:
     {% set RH = humidity %}
     {% set dewpt = '' %}
     {% if sensor_temp != '' and sensor_humidity != '' %}
-      {% set A = log(RH / 100) + (17.62 * T / (243.12 + T)) %}
+      {% set A = log(RH / 100, default=0.0) + (17.62 * T / (243.12 + T)) %}
       {% set dewpt = 243.12 * A / (17.62 - A) %}
       {% set dewpt = (dewpt * 1.8) + 32 %}
     {% endif %}
