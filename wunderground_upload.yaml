@@ -266,15 +266,14 @@ variables:
 
 action:
   - alias: "Check if station_id and station_key exist"
-    choose:
-      - conditions: >
-          {{      station_id != ''
-              and station_key != ''
-          }}
-        sequence:
-          - service: !input curl_command_service
-            data:
-              url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
+    if: >
+      {{      station_id != ''
+          and station_key != ''
+      }}
+    then:
+      - service: !input curl_command_service
+        data:
+          url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
   - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
