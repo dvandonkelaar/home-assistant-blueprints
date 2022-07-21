@@ -123,7 +123,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
-          device_class: temperature
+          device_class: humidity
       default: ''
     refresh_frequency:
       name: Refresh frequency (seconds)
