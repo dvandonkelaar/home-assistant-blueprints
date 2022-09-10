@@ -125,6 +125,18 @@ blueprint:
           domain: sensor
           device_class: humidity
       default: ''
+    sensor_solarradiation:
+      name: Solar Radiation
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_uvindex:
+      name: UV Index
+      selector:
+        entity:
+          domain: sensor
+      default: ''
     refresh_frequency:
       name: Refresh frequency (seconds)
       selector:
@@ -174,7 +186,9 @@ variables:
   sensor_rain: !input sensor_rain
   sensor_dailyrain: !input sensor_dailyrain
   sensor_indoortemp: !input sensor_indoortemp
+  sensor_solarradiation: !input sensor_solarradiation
   sensor_indoorhumidity: !input sensor_indoorhumidity
+  sensor_uvindex: !input sensor_uvindex
   rtfreq: !input refresh_frequency
   delay: !input delay
   baromin: >
@@ -190,23 +204,23 @@ variables:
     {{ sensor_humidity if sensor_humidity == '' else (states(sensor_humidity) | float(default=0)) }}
   windspeedmph: >
     {% set unit_of_measurement = state_attr(sensor_windspeed, 'unit_of_measurement') %}
-    {{ sensor_windspeed if sensor_windspeed == '' or unit_of_measurement != 'km/h'
+    {{ (states(sensor_windspeed) | float(default=0)) if sensor_windspeed == '' or unit_of_measurement != 'km/h'
         else ((states(sensor_windspeed) | float(default=0)) * 0.6213) }}
   windgustmph: >
     {% set unit_of_measurement = state_attr(sensor_windgust, 'unit_of_measurement') %}
-    {{ sensor_windgust if sensor_windgust == '' or unit_of_measurement != 'km/h'
+    {{ (states(sensor_windgust)|float(default=0)) if sensor_windgust == '' or unit_of_measurement != 'km/h'
         else ((states(sensor_windgust) | float(default=0)) * 0.6213) }}
   winddir: >
     {{ sensor_winddir if sensor_winddir == ''
         else (states(sensor_winddir) | float(default=0)) }}
   rainin: >
     {% set unit_of_measurement = state_attr(sensor_rain, 'unit_of_measurement') %}
-    {{ sensor_rain if sensor_rain == ''
-        else ((states(sensor_rain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' else 1) }}
+    {{ (states(sensor_rain)|float(default=0)) if sensor_rain == '' or unit_of_measurement == 'in'
+        else ((states(sensor_rain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' ) }}
   dailyrainin: >
     {% set unit_of_measurement = state_attr(sensor_dailyrain, 'unit_of_measurement') %}
-    {{ sensor_dailyrain if sensor_dailyrain == ''
-        else ((states(sensor_dailyrain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' else 1) }}
+    {{ (states(sensor_dailyrain)|float(default=0))if sensor_dailyrain == '' or unit_of_measurement == 'in'
+        else ((states(sensor_dailyrain) | float(default=0)) / 25.4 if unit_of_measurement == 'mm' ) }}
   indoortempf: >
     {% set unit_of_measurement = state_attr(sensor_indoortemp, 'unit_of_measurement') %}
     {{ sensor_indoortemp if sensor_indoortemp == ''
@@ -215,6 +229,12 @@ variables:
   indoorhumidity: >
     {{ sensor_indoorhumidity if sensor_indoorhumidity == ''
         else (states(sensor_indoorhumidity) | float(default=0)) }}
+  solarradiation: >
+    {{ sensor_solarradiation if sensor_solarradiation == ''
+        else (states(sensor_solarradiation) | float(default=0)) / 126.7 }} 
+  UV: >
+    {{ sensor_uvindex if sensor_uvindex == ''
+       else (states(sensor_uvindex) | int(default=0)) }}
   dewptf_calculated: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
     {% set T = ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°C'
@@ -248,10 +268,12 @@ variables:
           ,['dailyrainin', dailyrainin]
           ,['indoortempf', indoortempf]
           ,['indoorhumidity', indoorhumidity]
+          ,['solarradiation', solarradiation]
+          ,['UV', UV]
           ]%}
       {% if i[1] != '' %}
         {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
-                                              else (i[1] | round(3)) | string))] %}
+                                              else (i[1] | round(3, default="notavailable")) | string))] %}
       {% endif %}
     {% endfor %}
 
@@ -265,15 +287,14 @@ variables:
     {{ _payload }}
 
 action:
-  - alias: "Check if station_id and station_key exist"
-    if: >
-      {{      station_id != ''
-          and station_key != ''
-      }}
-    then:
-      - service: !input curl_command_service
-        data:
-          url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
+  - alias: "Check if station_id and station_key exist"  
+    condition: and
+    conditions:
+      - "{{ station_id != '' }}"
+      - "{{ station_key != '' }}"
+  - service: !input curl_command_service
+    data:
+      url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"#    if: >
   - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
