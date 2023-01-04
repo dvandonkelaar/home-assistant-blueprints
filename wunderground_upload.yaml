@@ -252,7 +252,7 @@ variables:
           ,['indoorhumidity', indoorhumidity]
           ]%}
       {% if i[1] != '' %}
-        {% set data.sensors= data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
+        {% set data.sensors = data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
                                               else (i[1] | round(3)) | string))] %}
       {% endif %}
     {% endfor %}
