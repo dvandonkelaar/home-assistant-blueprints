@@ -53,6 +53,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
+          device_class: pressure
       default: ''
     sensor_temp:
       name: Temperature sensor
@@ -66,6 +67,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
+          device_class: temperature
       default: ''
     calculate_dewpt:
       name: Calculate dewpoint
