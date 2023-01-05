@@ -128,13 +128,13 @@ blueprint:
           device_class: humidity
       default: ''
     sensor_solarradiation:
-      name: Solar Radiation
+      name: Solar Radiation sensor
       selector:
         entity:
           domain: sensor
       default: ''
-    sensor_uvindex:
-      name: UV Index
+    sensor_UV:
+      name: UV Index sensor
       selector:
         entity:
           domain: sensor
@@ -188,15 +188,16 @@ variables:
   sensor_rain: !input sensor_rain
   sensor_dailyrain: !input sensor_dailyrain
   sensor_indoortemp: !input sensor_indoortemp
-  sensor_solarradiation: !input sensor_solarradiation
   sensor_indoorhumidity: !input sensor_indoorhumidity
-  sensor_uvindex: !input sensor_uvindex
+  sensor_solarradiation: !input sensor_solarradiation
+  sensor_UV: !input sensor_UV
   rtfreq: !input refresh_frequency
   delay: !input delay
   baromin: >
     {% set unit_of_measurement = state_attr(sensor_baro, 'unit_of_measurement') %}
-    {{ sensor_baro if sensor_baro == '' and unit_of_measurement not in ['mbar', 'hPa']
-        else ((states(sensor_baro) | float(default=0)) / 33.8639) }}
+    {{ sensor_baro if sensor_baro == ''
+        else (states(sensor_baro) | float(default=0)) if unit_of_measurement not in ['mbar', 'hPa']
+          else ((states(sensor_baro) | float(default=0)) / 33.8639) }}
   tempf: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
     {{ sensor_temp if sensor_temp == ''
@@ -232,11 +233,13 @@ variables:
     {{ sensor_indoorhumidity if sensor_indoorhumidity == ''
         else (states(sensor_indoorhumidity) | float(default=0)) }}
   solarradiation: >
+    {% set unit_of_measurement = state_attr(sensor_solarradiation, 'unit_of_measurement') %}
     {{ sensor_solarradiation if sensor_solarradiation == ''
-        else (states(sensor_solarradiation) | float(default=0)) / 126.7 }} 
+        else ((states(sensor_solarradiation) / 126.7) | float(default=0)) if unit_of_measurement == 'lux'
+          else (states(sensor_solarradiation) | float(default=0)) }}
   UV: >
-    {{ sensor_uvindex if sensor_uvindex == ''
-       else (states(sensor_uvindex) | int(default=0)) }}
+    {{ sensor_UV if sensor_UV == ''
+       else (states(sensor_UV) | int(default=0)) }}
   dewptf_calculated: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
     {% set T = ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°C'
