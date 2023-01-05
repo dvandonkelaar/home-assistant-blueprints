@@ -196,7 +196,7 @@ variables:
   baromin: >
     {% set unit_of_measurement = state_attr(sensor_baro, 'unit_of_measurement') %}
     {{ sensor_baro if sensor_baro == ''
-        else ((states(sensor_baro) | float(default=0)) if unit_of_measurement not in ['mbar', 'hPa']
+        else (states(sensor_baro) | float(default=0)) if unit_of_measurement not in ['mbar', 'hPa']
           else ((states(sensor_baro) | float(default=0)) / 33.8639) }}
   tempf: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
@@ -239,7 +239,7 @@ variables:
           else (states(sensor_solarradiation) | float(default=0)) }}
   UV: >
     {{ sensor_UV if sensor_UV == ''
-       else (states(sensor_UV) | int(default=0)) }}
+        else (states(sensor_UV) | int(default=0)) }}
   dewptf_calculated: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
     {% set T = ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°C'
