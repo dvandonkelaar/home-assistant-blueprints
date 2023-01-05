@@ -127,6 +127,18 @@ blueprint:
           domain: sensor
           device_class: humidity
       default: ''
+    sensor_solarradiation:
+      name: Solar Radiation sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
+    sensor_UV:
+      name: UV Index sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
     refresh_frequency:
       name: Refresh frequency (seconds)
       selector:
@@ -177,6 +189,8 @@ variables:
   sensor_dailyrain: !input sensor_dailyrain
   sensor_indoortemp: !input sensor_indoortemp
   sensor_indoorhumidity: !input sensor_indoorhumidity
+  sensor_solarradiation: !input sensor_solarradiation
+  sensor_UV: !input sensor_UV
   rtfreq: !input refresh_frequency
   delay: !input delay
   baromin: >
@@ -218,6 +232,14 @@ variables:
   indoorhumidity: >
     {{ sensor_indoorhumidity if sensor_indoorhumidity == ''
         else (states(sensor_indoorhumidity) | float(default=0)) }}
+  solarradiation: >
+    {% set unit_of_measurement = state_attr(sensor_solarradiation, 'unit_of_measurement') %}
+    {{ sensor_solarradiation if sensor_solarradiation == ''
+        else ((states(sensor_solarradiation) / 126.7) | float(default=0)) if unit_of_measurement == 'lux'
+          else (states(sensor_solarradiation) | float(default=0)) }}
+  UV: >
+    {{ sensor_UV if sensor_UV == ''
+       else (states(sensor_UV) | int(default=0)) }}
   dewptf_calculated: >
     {% set unit_of_measurement = state_attr(sensor_temp, 'unit_of_measurement') %}
     {% set T = ((states(sensor_temp) | float(default=0)) if unit_of_measurement == '°C'
@@ -251,6 +273,8 @@ variables:
           ,['dailyrainin', dailyrainin]
           ,['indoortempf', indoortempf]
           ,['indoorhumidity', indoorhumidity]
+          ,['solarradiation', solarradiation]
+          ,['UV', UV]
           ]%}
       {% if i[1] != '' %}
         {% set data.sensors = data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
