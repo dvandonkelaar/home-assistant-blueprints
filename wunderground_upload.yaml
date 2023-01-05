@@ -278,7 +278,7 @@ variables:
           ]%}
       {% if i[1] != '' %}
         {% set data.sensors = data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
-                                              else (i[1] | round(3, default="notavailable")) | string))] %}
+                                              else (i[1] | round(3)) | string))] %}
       {% endif %}
     {% endfor %}
 
@@ -292,14 +292,15 @@ variables:
     {{ _payload }}
 
 action:
-  - alias: "Check if station_id and station_key exist"  
-    condition: and
-    conditions:
-      - "{{ station_id != '' }}"
-      - "{{ station_key != '' }}"
-  - service: !input curl_command_service
-    data:
-      url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"#    if: >
+  - alias: "Check if station_id and station_key exist"
+    if: >
+      {{      station_id != ''
+          and station_key != ''
+      }}
+    then:
+      - service: !input curl_command_service
+        data:
+          url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
   - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
