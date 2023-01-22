@@ -235,7 +235,7 @@ variables:
   solarradiation: >
     {% set unit_of_measurement = state_attr(sensor_solarradiation, 'unit_of_measurement') %}
     {{ sensor_solarradiation if sensor_solarradiation == ''
-        else ((states(sensor_solarradiation) / 126.7) | float(default=0)) if unit_of_measurement == 'lux'
+        else ((states(sensor_solarradiation) | float(default=0) / 126.7) ) if unit_of_measurement == 'lux'
           else (states(sensor_solarradiation) | float(default=0)) }}
   UV: >
     {{ sensor_UV if sensor_UV == ''
