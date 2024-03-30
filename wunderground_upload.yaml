@@ -214,8 +214,14 @@ variables:
     {{ sensor_windgust if sensor_windgust == ''
         else (states(sensor_windgust) | float(default=0)) * (0.6213 if unit_of_measurement == 'km/h' else 1) }}
   winddir: >
-    {{ sensor_winddir if sensor_winddir == ''
-        else (states(sensor_winddir) | float(default=0)) }}
+    {% set candidate_wind_direction = states(sensor_winddir) %}
+    {% set wind_direction_float = candidate_wind_direction | float(default=-1) %}
+    {% if wind_direction_float == -1 %}
+      {% set directions_map16 = {'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5, 'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5, 'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5, 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5} %}
+      {{ directions_map16.get(candidate_wind_direction, '') | float(default=0) }}
+    {%- else -%}
+      {{ wind_direction_float }}
+    {%- endif %}
   rainin: >
     {% set unit_of_measurement = state_attr(sensor_rain, 'unit_of_measurement') %}
     {{ sensor_rain if sensor_rain == ''
