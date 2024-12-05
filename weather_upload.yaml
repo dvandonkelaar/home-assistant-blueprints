@@ -2,10 +2,12 @@
 blueprint:
   name: Weather upload
   description: >
-    Upload weather data from Home Assistant to WUnderground.
+    Upload weather data from Home Assistant to WUnderground and/or WOW.
 
     Config:
-      The wu_station_id and wu_station_key variable must be fetched from WUnderground.
+      The wu_station_id and wu_station_key variable must be fetched from WUnderground and the wow_site_id and wow_site_auth_key variable must be fetchet from WOW.
+      Data will be uploaded to WUnderground if the wu_station_id and wu_station_key are filled in and data will be uploaded to WOW if the wow_site_id and wow_site_auth_key variable are filled in.
+
       The sensor_* variables are the sensors whos data will be uploaded
       The trigger_entities variable specifies the entries to trigger state changes on (this could be a list)
       The curl_command_service variable specifies the CURL-service to execute.
@@ -47,6 +49,12 @@ blueprint:
       default: ''
     wu_station_key:
       name: WUnderground station key
+      default: ''
+    wow_site_id:
+      name: WOW site ID
+      default: ''
+    wow_site_auth_key:
+      name: WOW site authentication key
       default: ''
     sensor_baro:
       name: Barometer sensor
@@ -180,6 +188,8 @@ trigger:
 variables:
   wu_station_id: !input wu_station_id
   wu_station_key: !input wu_station_key
+  wow_site_id: !input wow_site_id
+  wow_site_auth_key: !input wow_site_auth_key
   sensor_baro: !input sensor_baro
   sensor_temp: !input sensor_temp
   sensor_dewpt: !input sensor_dewpt
@@ -300,6 +310,33 @@ variables:
     {% set _payload = _payload + '&' if data.sensors | length > 0 else '' %}
     {% set _payload = _payload + data.sensors | join('&') %}
     {{ _payload }}
+  wow_payload: >
+    {% set data = namespace(sensors=[]) %}
+
+    {% for i in [['rtfreq', rtfreq]
+          ,['baromin', baromin]
+          ,['tempf', tempf]
+          ,['dewptf', dewptf]
+          ,['humidity', humidity]
+          ,['windspeedmph', windspeedmph]
+          ,['windgustmph', windgustmph]
+          ,['winddir', winddir]
+          ,['rainin', rainin]
+          ,['dailyrainin', dailyrainin]
+          ]%}
+      {% if i[1] != '' %}
+        {% set data.sensors = data.sensors + ['{}={}'.format(i[0], (i[1] if i[0] == 'rtfreq'
+                                              else (i[1] | round(3)) | string))] %}
+      {% endif %}
+    {% endfor %}
+
+    {% set _payload = 'siteid=' + station_id %}
+    {% set _payload = _payload + '&siteAuthenticationKey=' + station_key %}
+    {% set _payload = _payload + '&dateutc=now' %}
+    {% set _payload = _payload + '&' if data.sensors | length > 0 else '' %}
+    {% set _payload = _payload + data.sensors | join('&') %}
+    {% set _payload = _payload + '&softwaretype=homeassistant' %}    
+    {{ _payload }}
 
 action:
   - alias: "Check if wu_station_id and wu_station_key exist"
@@ -311,6 +348,25 @@ action:
       - service: !input curl_command_service
         data:
           url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ wu_payload }}"
+  - alias: "Wait before next upload if both WU and WOW are configured"
+    if: >
+      {{      wu_station_id != ''
+          and wu_station_key != ''
+          and wow_site_id != ''
+          and wow_site_auth_key != ''
+      }}
+    then:
+      - delay:
+          seconds: "{{ delay | int }}"
+  - alias: "Check if wow_site_id and wow_site_auth_key exist"
+    if: >
+      {{      wow_site_id != ''
+          and wow_site_auth_key != ''
+      }}
+    then:
+      - service: !input curl_command_service
+        data:
+          url: "http://wow.metoffice.gov.uk/automaticreading?{{ wow_payload }}"
   - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
