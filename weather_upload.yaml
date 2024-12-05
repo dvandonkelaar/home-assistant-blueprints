@@ -5,7 +5,7 @@ blueprint:
     Upload weather data from Home Assistant to WUnderground.
 
     Config:
-      The station_id and station_key variable must be fetched from WUnderground.
+      The wu_station_id and wu_station_key variable must be fetched from WUnderground.
       The sensor_* variables are the sensors whos data will be uploaded
       The trigger_entities variable specifies the entries to trigger state changes on (this could be a list)
       The curl_command_service variable specifies the CURL-service to execute.
@@ -25,8 +25,8 @@ blueprint:
           use_blueprint:
             path: weather_upload.yaml
             input:
-              station_id: !secret wunderground_station_id
-              station_key: !secret wunderground_station_key
+              wu_station_id: !secret wunderground_station_id
+              wu_station_key: !secret wunderground_station_key
               sensor_baro: 'sensor.outdoor_pressure'
               sensor_temp: 'sensor.outdoor_temperature'
               sensor_humidity: 'sensor.outdoor_humidity'
@@ -42,11 +42,11 @@ blueprint:
   domain: automation
   source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/weather_upload.yaml"
   input:
-    station_id:
-      name: Station ID
+    wu_station_id:
+      name: WUnderground station ID
       default: ''
-    station_key:
-      name: Station key
+    wu_station_key:
+      name: WUnderground station key
       default: ''
     sensor_baro:
       name: Barometer sensor
@@ -178,8 +178,8 @@ trigger:
     entity_id: !input trigger_entities
 
 variables:
-  station_id: !input station_id
-  station_key: !input station_key
+  wu_station_id: !input wu_station_id
+  wu_station_key: !input wu_station_key
   sensor_baro: !input sensor_baro
   sensor_temp: !input sensor_temp
   sensor_dewpt: !input sensor_dewpt
@@ -268,7 +268,7 @@ variables:
         else sensor_dewpt) if sensor_dewpt == ''
           else ((states(sensor_dewpt) | float(default=0)) if unit_of_measurement == '°F'
             else ((states(sensor_dewpt) | float(default=0)) * 1.8) + 32) }}
-  payload: >
+  wu_payload: >
     {% set data = namespace(sensors=[]) %}
 
     {% for i in [['rtfreq', rtfreq]
@@ -302,15 +302,15 @@ variables:
     {{ _payload }}
 
 action:
-  - alias: "Check if station_id and station_key exist"
+  - alias: "Check if wu_station_id and wu_station_key exist"
     if: >
-      {{      station_id != ''
-          and station_key != ''
+      {{      wu_station_id != ''
+          and wu_station_key != ''
       }}
     then:
       - service: !input curl_command_service
         data:
-          url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ payload }}"
+          url: "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?{{ wu_payload }}"
   - alias: "Wait to prevent multiple uploads"
     delay:
       seconds: "{{ delay | int }}"
