@@ -1,8 +1,8 @@
 
 blueprint:
-  name: WUnderground upload
+  name: Weather upload
   description: >
-    Upload data from Home Assistant to WUnderground.
+    Upload weather data from Home Assistant to WUnderground.
 
     Config:
       The station_id and station_key variable must be fetched from WUnderground.
@@ -20,10 +20,10 @@ blueprint:
 
     Automation config example:
       automation:
-        - id: wunderground_data_upload
-          alias: WUnderground data upload
+        - id: weather_data_upload
+          alias: Weather data upload
           use_blueprint:
-            path: wunderground_upload.yaml
+            path: weather_upload.yaml
             input:
               station_id: !secret wunderground_station_id
               station_key: !secret wunderground_station_key
@@ -40,7 +40,7 @@ blueprint:
                 - sensor.outdoor_rain_today
               curl_command_service: shell_command.curl_get
   domain: automation
-  source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/wunderground_upload.yaml"
+  source_url: "https://github.com/dvandonkelaar/home-assistant-blueprints/raw/main/weather_upload.yaml"
   input:
     station_id:
       name: Station ID
