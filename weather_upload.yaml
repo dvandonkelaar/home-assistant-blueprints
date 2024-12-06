@@ -302,8 +302,8 @@ variables:
       {% endif %}
     {% endfor %}
 
-    {% set _payload = 'ID=' + station_id %}
-    {% set _payload = _payload + '&PASSWORD=' + station_key %}
+    {% set _payload = 'ID=' + wu_station_id %}
+    {% set _payload = _payload + '&PASSWORD=' + wu_station_key %}
     {% set _payload = _payload + '&action=updateraww' %}
     {% set _payload = _payload + '&realtime=1' %}
     {% set _payload = _payload + '&dateutc=now' %}
@@ -330,8 +330,8 @@ variables:
       {% endif %}
     {% endfor %}
 
-    {% set _payload = 'siteid=' + station_id %}
-    {% set _payload = _payload + '&siteAuthenticationKey=' + station_key %}
+    {% set _payload = 'siteid=' + wow_site_id %}
+    {% set _payload = _payload + '&siteAuthenticationKey=' + wow_site_auth_key %}
     {% set _payload = _payload + '&dateutc=now' %}
     {% set _payload = _payload + '&' if data.sensors | length > 0 else '' %}
     {% set _payload = _payload + data.sensors | join('&') %}
