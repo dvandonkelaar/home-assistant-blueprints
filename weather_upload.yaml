@@ -109,6 +109,12 @@ blueprint:
         entity:
           domain: sensor
       default: ''
+    sensor_windgustdir:
+      name: Wind Gust direction sensor
+      selector:
+        entity:
+          domain: sensor
+      default: ''
     sensor_rain:
       name: Rain sensor
       selector:
@@ -198,6 +204,7 @@ variables:
   sensor_windspeed: !input sensor_windspeed
   sensor_windgust: !input sensor_windgust
   sensor_winddir: !input sensor_winddir
+  sensor_windgustdir: !input sensor_windgustdir
   sensor_rain: !input sensor_rain
   sensor_dailyrain: !input sensor_dailyrain
   sensor_indoortemp: !input sensor_indoortemp
@@ -235,6 +242,16 @@ variables:
       {{ directions_map16.get(candidate_wind_direction, '') | float(default=0) }}
     {%- else -%}
       {{ wind_direction_float }}
+    {%- endif %}
+  windgustdir: >
+    {% set candidate_windgust_direction = states(sensor_windgustdir) %}
+    {% set windgust_direction_float = candidate_windgust_direction | float(default=-1) %}
+    {% if windgust_direction_float == -1 %}
+      {% set directions_map16 = {'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5, 'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5, 'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5, 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5} %}
+      {% set candidate_windgust_direction = candidate_windgust_direction.upper() %}
+      {{ directions_map16.get(candidate_windgust_direction, '') | float(default=0) }}
+    {%- else -%}
+      {{ windgust_direction_float }}
     {%- endif %}
   rainin: >
     {% set unit_of_measurement = state_attr(sensor_rain, 'unit_of_measurement') %}
@@ -289,6 +306,7 @@ variables:
           ,['windspeedmph', windspeedmph]
           ,['windgustmph', windgustmph]
           ,['winddir', winddir]
+          ,['windgustdir', windgustdir]
           ,['rainin', rainin]
           ,['dailyrainin', dailyrainin]
           ,['indoortempf', indoortempf]
@@ -321,6 +339,7 @@ variables:
           ,['windspeedmph', windspeedmph]
           ,['windgustmph', windgustmph]
           ,['winddir', winddir]
+          ,['windgustdir', windgustdir]
           ,['rainin', rainin]
           ,['dailyrainin', dailyrainin]
           ]%}
