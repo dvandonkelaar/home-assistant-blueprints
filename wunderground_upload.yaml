@@ -53,7 +53,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
-          device_class: 
+          device_class:
             - pressure
             - barometric_pressure
       default: ''
