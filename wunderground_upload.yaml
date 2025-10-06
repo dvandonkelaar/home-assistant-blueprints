@@ -160,6 +160,7 @@ blueprint:
           max: 10800
           step: 1
           unit_of_measurement: seconds
+      default: '300'
     trigger_entities:
       name: Trigger entities
       selector:
