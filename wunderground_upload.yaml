@@ -55,7 +55,7 @@ blueprint:
           domain: sensor
           device_class:
             - pressure
-            - barometric_pressure
+            - atmospheric_pressure
       default: ''
     sensor_temp:
       name: Temperature sensor
@@ -90,24 +90,28 @@ blueprint:
       selector:
         entity:
           domain: sensor
+          device_class: wind_speed
       default: ''
     sensor_windgust:
       name: Wind gust sensor
       selector:
         entity:
           domain: sensor
+          device_class: wind_speed
       default: ''
     sensor_winddir:
       name: Wind direction sensor
       selector:
         entity:
           domain: sensor
+          device_class: wind_direction
       default: ''
     sensor_windgustdir:
       name: Wind Gust direction sensor
       selector:
         entity:
           domain: sensor
+          device_class: wind_direction
       default: ''
     sensor_rain:
       name: Rain sensor
@@ -140,6 +144,7 @@ blueprint:
       selector:
         entity:
           domain: sensor
+          device_class: irradiance
       default: ''
     sensor_UV:
       name: UV Index sensor
@@ -167,7 +172,7 @@ blueprint:
       name: CURL command service
       selector:
         text:
-      default: ''
+      default: 'shell_command.curl_get'
     delay:
       name: Delay after publishing results
       selector:
